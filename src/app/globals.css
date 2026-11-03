@@ -1,0 +1,66 @@
+:root {
+  --bg: #f6f7f9;
+  --card: #fff;
+  --text: #1c2430;
+  --muted: #667085;
+  --accent: #1f6feb;
+  --border: #dde2e8;
+  --error: #c62828;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+main { max-width: 860px; margin: 0 auto; padding: 2rem 1rem; }
+h1 { margin-top: 0; }
+h1 a { color: inherit; text-decoration: none; }
+a { color: var(--accent); }
+
+label { font-weight: 600; display: block; margin-bottom: .4rem; }
+.row { display: flex; gap: .5rem; flex-wrap: wrap; }
+input {
+  padding: .55rem .7rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem;
+}
+.grow { flex: 1; min-width: 200px; }
+button {
+  padding: .55rem 1rem; border: 0; border-radius: 6px; background: var(--accent);
+  color: #fff; font-size: 1rem; cursor: pointer;
+}
+button:disabled { opacity: .5; cursor: not-allowed; }
+.hint, .muted { color: var(--muted); font-size: .9rem; }
+.error { color: var(--error); }
+
+.league-list { list-style: none; padding: 0; display: grid; gap: .5rem; }
+.league-item {
+  padding: .55rem 1rem; border-radius: 6px; background: var(--card); color: var(--text);
+  border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
+  text-decoration: none;
+}
+a.league-item:hover { border-color: var(--accent); }
+.league-item.disabled { opacity: .5; }
+.tag {
+  font-size: .75rem; padding: .15rem .5rem; border-radius: 999px; background: #e8f0fe; color: var(--accent);
+}
+.tag.off { background: #eee; color: var(--muted); }
+
+.card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 1rem 1.25rem; margin-top: 1rem;
+}
+.card h2, .card h3 { margin-top: 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .75rem; }
+.stat .label { color: var(--muted); font-size: .8rem; }
+.stat .value { font-weight: 600; }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: .4rem .5rem; border-bottom: 1px solid var(--border); }
+th { font-size: .8rem; color: var(--muted); }
+td.num, th.num { text-align: right; }
+.chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+.chip { border: 1px solid var(--border); border-radius: 4px; padding: .1rem .45rem; font-size: .85rem; }
