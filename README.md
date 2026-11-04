@@ -2,6 +2,8 @@
 
 Sleeper Lock-In League Viewer: a Next.js app. Sign in with a code sent to your email, enter your Sleeper username, and choose the NBA Lock-In leagues you want to follow. Open a league to see its overview, standings, roster slots and scoring.
 
+Signed-in pages have a sidebar with six tabs. League History is the only one that works so far: My Teams, Rankings, Calculate, Waiver and Account are "under construction" placeholders.
+
 Every page except the sign-in page requires an account.
 
 ## Set up Supabase
@@ -38,10 +40,15 @@ Production build: `npm run build && npm start`.
 | `src/lib/supabase/` | Supabase clients for the browser, the server and the proxy, plus table types |
 | `src/lib/sleeper.ts` | The only code that talks to Sleeper: typed fetchers, cache lifetimes, Lock-In detection |
 | `supabase/migrations/` | Database tables and row-level security policies |
-| `src/app/page.tsx` | Sign-in page, which is also the landing page |
-| `src/app/onboarding/` | Sleeper username and league picker steps, and the server actions that save them |
-| `src/app/leagues/page.tsx` | Dashboard of followed leagues |
-| `src/app/league/[leagueId]/page.tsx` | League details, for members of that league |
+| `src/components/SidebarNav.tsx` | The list of sidebar tabs and their icons |
+| `src/components/Logo.tsx`, `src/app/icon.svg` | The logo, in the app and as the browser tab icon. Keep the two in step |
+| `src/app/(setup)/` | Single-column layout for the sign-in page and the onboarding steps |
+| `src/app/(setup)/page.tsx` | Sign-in page, which is also the landing page |
+| `src/app/(setup)/onboarding/` | Sleeper username and league picker steps, and the server actions that save them |
+| `src/app/(main)/` | Sidebar layout for the tabs |
+| `src/app/(main)/leagues/page.tsx` | League History tab: followed leagues |
+| `src/app/(main)/league/[leagueId]/page.tsx` | League details, for members of that league |
+| `src/app/(main)/{my-teams,rankings,calculate,waiver,account}/` | Placeholder tabs |
 
 ## Notes
 

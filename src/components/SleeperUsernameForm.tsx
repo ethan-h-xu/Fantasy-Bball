@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { saveSleeperUsername } from "@/app/onboarding/actions";
+import { saveSleeperUsername } from "@/app/(setup)/onboarding/actions";
 
 export function SleeperUsernameForm({ defaultUsername = "" }: { defaultUsername?: string }) {
   const [state, action, pending] = useActionState(saveSleeperUsername, {});

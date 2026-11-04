@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { NoLockInMessage } from "@/components/NoLockInMessage";
+import { PageHeader } from "@/components/PageHeader";
 import { requireOnboardedUser, type Profile } from "@/lib/auth";
 import { getLeague, getNbaState, getUserNbaLeagues } from "@/lib/sleeper";
 
 export default function LeaguesPage() {
   return (
     <>
-      <h2>Your leagues</h2>
+      <PageHeader title="League History" subtitle="Your NBA Lock-In leagues" />
       <Suspense fallback={<p className="muted">Loading your leagues…</p>}>
         <Dashboard />
       </Suspense>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { PageHeader } from "@/components/PageHeader";
 import { requireOnboardedUser } from "@/lib/auth";
 import {
   getLeague,
@@ -22,9 +23,12 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function LeaguePage({ params }: PageProps<"/league/[leagueId]">) {
   return (
-    <Suspense fallback={<p className="muted">Loading league…</p>}>
-      <LeagueDetail params={params} />
-    </Suspense>
+    <>
+      <PageHeader title="League History" />
+      <Suspense fallback={<p className="muted">Loading league…</p>}>
+        <LeagueDetail params={params} />
+      </Suspense>
+    </>
   );
 }
 
@@ -40,7 +44,7 @@ async function LeagueDetail({ params }: Pick<PageProps<"/league/[leagueId]">, "p
       <>
         <p className="error">No NBA league found with ID {leagueId}.</p>
         <p>
-          <Link href="/leagues">Back to your leagues</Link>
+          <Link href="/leagues">Back to League History</Link>
         </p>
       </>
     );
@@ -51,7 +55,7 @@ async function LeagueDetail({ params }: Pick<PageProps<"/league/[leagueId]">, "p
   return (
     <>
       <p>
-        <Link href="/leagues">← Your leagues</Link>
+        <Link href="/leagues">← League History</Link>
       </p>
       {!isLockIn(league) &&<p className="error">Note: this league doesn&apos;t appear to be a Lock-In league.</p>}
       <Overview league={league} />

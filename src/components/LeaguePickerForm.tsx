@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { saveFollowedLeagues } from "@/app/onboarding/actions";
+import { saveFollowedLeagues } from "@/app/(setup)/onboarding/actions";
 
 export interface LeagueOption {
   league_id: string;

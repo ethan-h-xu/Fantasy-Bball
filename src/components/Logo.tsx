@@ -1,0 +1,11 @@
+/** A padlock whose body is a faceted basketball, for Lock-In leagues. Matches src/app/icon.svg. */
+export function Logo() {
+  return (
+    <svg className="logo" viewBox="0 0 32 32" aria-hidden="true">
+      <rect x=".5" y=".5" width="31" height="31" rx="2.5" fill="#0d1321" stroke="#3e5c76" />
+      <path d="M11.5 12V7.5l2-2h5l2 2V12" fill="none" stroke="#f0ebd8" strokeWidth="2" />
+      <path d="M12.7 12h6.6L24 16.7v6.6L19.3 28h-6.6L8 23.3v-6.6z" fill="#f0ebd8" />
+      <path d="M16 12v16M8 20h16M11 14l2.5 6-2.5 6M21 14l-2.5 6 2.5 6" fill="none" stroke="#0d1321" />
+    </svg>
+  );
+}
