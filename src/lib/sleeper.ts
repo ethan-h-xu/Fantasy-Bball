@@ -23,10 +23,12 @@ export interface LeagueSettings {
   num_teams?: number;
   playoff_teams?: number;
   playoff_week_start?: number;
+  playoff_round_type?: number;
+  last_scored_leg?: number | null;
   trade_deadline?: number;
   waiver_budget?: number;
   draft_rounds?: number;
-  [key: string]: number | undefined;
+  [key: string]: number | null | undefined;
 }
 
 export interface League {
@@ -58,6 +60,32 @@ export interface Roster {
     fpts_against?: number;
     fpts_against_decimal?: number;
   };
+}
+
+export interface Matchup {
+  roster_id: number;
+  /** Null when the team has no game that week, such as a playoff bye. */
+  matchup_id: number | null;
+  points: number | null;
+  custom_points: number | null;
+}
+
+/** One game in a playoff bracket. t1, t2, w and l are roster IDs, null until decided. */
+export interface BracketGame {
+  r: number;
+  m: number;
+  t1: number | null;
+  t2: number | null;
+  w: number | null;
+  l: number | null;
+  /** The place this game decides. 1 is the final. */
+  p?: number;
+}
+
+export interface Transaction {
+  type: "trade" | "waiver" | "free_agent" | "commissioner" | string;
+  status: "complete" | "failed" | string;
+  roster_ids: number[];
 }
 
 export interface NbaState {
@@ -137,8 +165,17 @@ export async function getLeagueRosters(leagueId: string): Promise<Roster[]> {
   return (await get<Roster[]>(`/league/${encodeURIComponent(leagueId)}/rosters`)) ?? [];
 }
 
-// --- Helpers ---
+// The next three aren't cached one by one. There are dozens of calls per season, so
+// src/lib/league-history.ts caches a summary of each season instead.
 
-export function rosterPointsFor(r: Roster): number {
-  return (r.settings.fpts ?? 0) + (r.settings.fpts_decimal ?? 0) / 100;
+export async function fetchMatchups(leagueId: string, week: number): Promise<Matchup[]> {
+  return (await get<Matchup[]>(`/league/${encodeURIComponent(leagueId)}/matchups/${week}`)) ?? [];
+}
+
+export async function fetchTransactions(leagueId: string, week: number): Promise<Transaction[]> {
+  return (await get<Transaction[]>(`/league/${encodeURIComponent(leagueId)}/transactions/${week}`)) ?? [];
+}
+
+export async function fetchBracket(leagueId: string, bracket: "winners" | "losers"): Promise<BracketGame[]> {
+  return (await get<BracketGame[]>(`/league/${encodeURIComponent(leagueId)}/${bracket}_bracket`)) ?? [];
 }
