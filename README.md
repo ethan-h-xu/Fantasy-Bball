@@ -11,8 +11,8 @@ Every page except the sign-in page requires an account.
 Accounts are stored in [Supabase](https://supabase.com).
 
 1. Create a Supabase project.
-2. Copy `.env.example` to `.env.local` and fill in the project URL and publishable key. The app doesn't need the secret key.
-3. Run `supabase/migrations/20261104000000_create_profiles_and_followed_leagues.sql` in the SQL Editor.
+2. Copy `.env.example` to `.env.local` and fill in the project URL, publishable key and secret key. On Vercel, set the same three as environment variables. Only the server uses the secret key, so never give it a `NEXT_PUBLIC_` prefix.
+3. Run each file in `supabase/migrations/` in the SQL Editor, oldest first.
 4. Under **Authentication → Emails**, set up custom SMTP. Supabase's built-in email can't use edited templates, and it only reaches your project's team members.
 5. Replace the body of both the **Magic Link** and **Confirm signup** templates so they send a code rather than a link:
    ```html
@@ -37,9 +37,9 @@ Production build: `npm run build && npm start`.
 |---|---|
 | `src/proxy.ts` | Runs on each request: refreshes the session, and redirects by signed-in status |
 | `src/lib/auth.ts` | Current user and profile, plus the `require*` guards used by pages and server actions |
-| `src/lib/supabase/` | Supabase clients for the browser, the server and the proxy, plus table types |
+| `src/lib/supabase/` | Supabase clients for the browser, the server, the proxy and secret-key access, plus table types |
 | `src/lib/sleeper.ts` | The only code that talks to Sleeper: typed fetchers, cache lifetimes, Lock-In detection |
-| `src/lib/league-history.ts` | Follows a league back through its past seasons, and caches a summary of each |
+| `src/lib/league-history.ts` | Follows a league back through its past seasons, and stores a summary of each finished one |
 | `src/lib/league-stats.ts` | Turns a season's raw data into that summary, and adds summaries up into tables. Runs on the server and in the browser |
 | `supabase/migrations/` | Database tables and row-level security policies |
 | `src/components/SidebarNav.tsx` | The list of sidebar tabs and their icons |
@@ -57,11 +57,12 @@ Production build: `npm run build && npm start`.
 
 - **Sign-in:** codes are sent and verified from the browser, because Supabase rate limits those calls per IP. Going through the server would make all users share one limit.
 - **Protecting pages:** call a `require*` guard from `src/lib/auth.ts` in every page and server action, inside `<Suspense>`. The proxy is only a first layer, and layouts don't re-run on navigation.
-- **Stored data:** `profiles` holds the Sleeper username and user ID, and `followed_leagues` holds league IDs. Email stays in Supabase's `auth.users`, and league details are read live from Sleeper.
+- **Stored data:** `profiles` holds the Sleeper username and user ID, `followed_leagues` holds league IDs, and `season_summaries` holds finished seasons. Email stays in Supabase's `auth.users`, and everything else about a league is read live from Sleeper.
 - **Unverified usernames:** nothing proves a user owns the Sleeper username they enter, so anyone can enter any username and open that account's leagues. Those leagues are already public on Sleeper, but don't rely on league membership to protect private data.
-- Sleeper is called from the server, and responses are cached with Next.js `"use cache"` and `cacheLife` (user lookups for hours, leagues and rosters for minutes, season summaries for weeks once a season is complete).
+- Sleeper is called from the server, and responses are cached with Next.js `"use cache"` and `cacheLife` (user lookups for hours, leagues and rosters for minutes).
 - **No email lookup:** Sleeper's public API only resolves usernames and user IDs.
 - **Season history:** seasons are linked by `previous_league_id`, and teams are matched across seasons by Sleeper user ID, because roster IDs change hands. A past season is included even if it isn't Lock-In, since it's the same league.
+- **Stored seasons:** `use cache` doesn't last between requests on serverless hosts or across deploys, and a season takes dozens of Sleeper calls, so finished seasons are saved to `season_summaries`. The table is a cache that only the server can access. To pick up a change made on Sleeper, like a commissioner's correction, delete the row and the next page load rebuilds it. If the format changes, raise `SUMMARY_FORMAT_VERSION` in `src/lib/league-stats.ts`. The season in progress isn't stored, so it still comes from Sleeper.
 - **Per-game scores aren't official:** in `/matchups/<week>`, `points` is the sum of `starters_points`. For some seasons it disagrees with the official totals on each roster, and sometimes with who won. In one league inspected, 2024 matched exactly and 2025 didn't, with 3 of 7 playoff games won by the team with fewer `points`. Sleeper's public API has no official per-game score. So regular-season standings come from roster totals and playoff results from the brackets. Only head-to-head records and playoff PF/PA use per-game scores, and the page says so.
 - **Toilet bowl:** the winner is the winner of the `p: 1` game in `/losers_bracket`. In that bracket `w` is normally the team that scored less, so its games aren't counted in any record.
 - **Lock-In detection:** Sleeper doesn't document a Lock-In flag. The app treats `settings.game_mode === 1` as Lock-In, based on observed leagues. To change it, edit `LOCK_IN_GAME_MODE` in `src/lib/sleeper.ts`.

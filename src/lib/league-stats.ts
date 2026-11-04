@@ -30,6 +30,12 @@ export interface FinalResult {
   opponent: string;
 }
 
+/**
+ * Finished seasons are stored in the database in the SeasonHistory format. Raise this when that
+ * format or how it's calculated changes, and stored seasons get rebuilt from Sleeper.
+ */
+export const SUMMARY_FORMAT_VERSION = 1;
+
 export interface SeasonHistory {
   leagueId: string;
   previousLeagueId: string | null;

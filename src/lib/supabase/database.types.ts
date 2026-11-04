@@ -1,5 +1,7 @@
 // Mirrors supabase/migrations. Update this when the schema changes.
 
+import type { SeasonHistory } from "@/lib/league-stats";
+
 export type Database = {
   public: {
     Tables: {
@@ -52,6 +54,30 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      season_summaries: {
+        Row: {
+          league_id: string;
+          format_version: number;
+          summary: SeasonHistory;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          league_id: string;
+          format_version: number;
+          summary: SeasonHistory;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          league_id?: string;
+          format_version?: number;
+          summary?: SeasonHistory;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
     };
     Views: Record<never, never>;
