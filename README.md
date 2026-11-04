@@ -1,8 +1,24 @@
 # Fantasy-Bball
 
-Sleeper Lock-In League Viewer: a Next.js app. Enter a Sleeper username to list that user's NBA leagues for a season. Pick a Lock-In league to see its overview, standings, roster slots and scoring.
+Sleeper Lock-In League Viewer: a Next.js app. Sign in with a code sent to your email, enter your Sleeper username, and choose the NBA Lock-In leagues you want to follow. Open a league to see its overview, standings, roster slots and scoring.
 
-See [PLAN.md](PLAN.md) for the roadmap: accounts, Lock-In tools and deployment.
+Every page except the sign-in page requires an account.
+
+## Set up Supabase
+
+Accounts are stored in [Supabase](https://supabase.com).
+
+1. Create a Supabase project.
+2. Copy `.env.example` to `.env.local` and fill in the project URL and publishable key. The app doesn't need the secret key.
+3. Run `supabase/migrations/20261104000000_create_profiles_and_followed_leagues.sql` in the SQL Editor.
+4. Under **Authentication → Emails**, set up custom SMTP. Supabase's built-in email can't use edited templates, and it only reaches your project's team members.
+5. Replace the body of both the **Magic Link** and **Confirm signup** templates so they send a code rather than a link:
+   ```html
+   <h2>Your sign-in code</h2>
+   <p>Enter this code to sign in: {{ .Token }}</p>
+   <p>This code expires in 10 minutes and can only be used once.</p>
+   ```
+6. Under **Authentication → Sign In / Providers → Email**, set **Email OTP Expiration** to `600` seconds.
 
 ## Run
 
@@ -17,14 +33,22 @@ Production build: `npm run build && npm start`.
 
 | Path | What it is |
 |---|---|
+| `src/proxy.ts` | Runs on each request: refreshes the session, and redirects by signed-in status |
+| `src/lib/auth.ts` | Current user and profile, plus the `require*` guards used by pages and server actions |
+| `src/lib/supabase/` | Supabase clients for the browser, the server and the proxy, plus table types |
 | `src/lib/sleeper.ts` | The only code that talks to Sleeper: typed fetchers, cache lifetimes, Lock-In detection |
-| `src/app/page.tsx` | Home page with the search form |
-| `src/app/user/[username]/page.tsx` | A user's NBA leagues for a season (`?season=2026`) |
-| `src/app/league/[leagueId]/page.tsx` | League details |
-| `src/components/SearchForm.tsx` | Username and season form (client component) |
+| `supabase/migrations/` | Database tables and row-level security policies |
+| `src/app/page.tsx` | Sign-in page, which is also the landing page |
+| `src/app/onboarding/` | Sleeper username and league picker steps, and the server actions that save them |
+| `src/app/leagues/page.tsx` | Dashboard of followed leagues |
+| `src/app/league/[leagueId]/page.tsx` | League details, for members of that league |
 
 ## Notes
 
+- **Sign-in:** codes are sent and verified from the browser, because Supabase rate limits those calls per IP. Going through the server would make all users share one limit.
+- **Protecting pages:** call a `require*` guard from `src/lib/auth.ts` in every page and server action, inside `<Suspense>`. The proxy is only a first layer, and layouts don't re-run on navigation.
+- **Stored data:** `profiles` holds the Sleeper username and user ID, and `followed_leagues` holds league IDs. Email stays in Supabase's `auth.users`, and league details are read live from Sleeper.
+- **Unverified usernames:** nothing proves a user owns the Sleeper username they enter, so anyone can enter any username and open that account's leagues. Those leagues are already public on Sleeper, but don't rely on league membership to protect private data.
 - Sleeper is called from the server, and responses are cached with Next.js `"use cache"` and `cacheLife` (user lookups for hours, leagues and rosters for minutes).
 - **No email lookup:** Sleeper's public API only resolves usernames and user IDs.
 - **Lock-In detection:** Sleeper doesn't document a Lock-In flag. The app treats `settings.game_mode === 1` as Lock-In, based on observed leagues. To change it, edit `LOCK_IN_GAME_MODE` in `src/lib/sleeper.ts`.

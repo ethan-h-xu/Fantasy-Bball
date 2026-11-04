@@ -1,7 +1,6 @@
-import { SearchForm } from "@/components/SearchForm";
-import { getNbaState } from "@/lib/sleeper";
+import { SignInForm } from "@/components/SignInForm";
 
-export default async function Home() {
-  const state = await getNbaState();
-  return <SearchForm defaultSeason={state.league_season} />;
+// Signed-in users never reach this page: src/proxy.ts sends them to /leagues.
+export default function Home() {
+  return <SignInForm />;
 }

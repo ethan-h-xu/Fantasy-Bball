@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { Suspense } from "react";
+import { requireOnboardedUser } from "@/lib/auth";
 import {
   getLeague,
   getLeagueRosters,
@@ -27,20 +29,31 @@ export default function LeaguePage({ params }: PageProps<"/league/[leagueId]">) 
 }
 
 async function LeagueDetail({ params }: Pick<PageProps<"/league/[leagueId]">, "params">) {
+  const { profile } = await requireOnboardedUser();
   const { leagueId } = await params;
-  const [league, users, rosters] = await Promise.all([
-    getLeague(leagueId),
-    getLeagueUsers(leagueId),
-    getLeagueRosters(leagueId),
-  ]);
+  const [league, users] = await Promise.all([getLeague(leagueId), getLeagueUsers(leagueId)]);
 
-  if (!league || league.sport !== "nba") {
-    return <p className="error">No NBA league found with ID {leagueId}.</p>;
+  // Leagues the user isn't in get the same message as ones that don't exist.
+  const isMember = users.some((u) => u.user_id === profile.sleeper_user_id);
+  if (!league || league.sport !== "nba" || !isMember) {
+    return (
+      <>
+        <p className="error">No NBA league found with ID {leagueId}.</p>
+        <p>
+          <Link href="/leagues">Back to your leagues</Link>
+        </p>
+      </>
+    );
   }
+
+  const rosters = await getLeagueRosters(leagueId);
 
   return (
     <>
-      {!isLockIn(league) && <p className="error">Note: this league doesn&apos;t appear to be a Lock-In league.</p>}
+      <p>
+        <Link href="/leagues">← Your leagues</Link>
+      </p>
+      {!isLockIn(league) &&<p className="error">Note: this league doesn&apos;t appear to be a Lock-In league.</p>}
       <Overview league={league} />
       <Standings rosters={rosters} users={users} />
       <RosterSlots positions={league.roster_positions ?? []} />

@@ -48,6 +48,13 @@ a.league-item:hover { border-color: var(--accent); }
   font-size: .75rem; padding: .15rem .5rem; border-radius: 999px; background: #e8f0fe; color: var(--accent);
 }
 .tag.off { background: #eee; color: var(--muted); }
+.league-option { gap: .75rem; font-weight: 400; margin-bottom: 0; cursor: pointer; }
+.league-option:hover { border-color: var(--accent); }
+
+.link-button {
+  padding: 0; background: none; color: var(--accent); font-size: inherit; text-decoration: underline;
+}
+.account { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-bottom: 1rem; }
 
 .card {
   background: var(--card); border: 1px solid var(--border); border-radius: 8px;
