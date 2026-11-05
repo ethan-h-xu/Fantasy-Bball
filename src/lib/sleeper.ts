@@ -150,30 +150,47 @@ export async function getUserNbaLeagues(userId: string, season: string): Promise
 export async function getLeague(leagueId: string): Promise<League | null> {
   "use cache";
   cacheLife("minutes");
-  return get<League>(`/league/${encodeURIComponent(leagueId)}`);
+  return fetchLeague(leagueId);
 }
 
 export async function getLeagueUsers(leagueId: string): Promise<SleeperUser[]> {
   "use cache";
   cacheLife("minutes");
+  return fetchLeagueUsers(leagueId);
+}
+
+// The fetch* functions aren't cached one by one. src/lib/league-history.ts builds a season from
+// them all at once, so the summary it stores for a week is one consistent snapshot of Sleeper,
+// not a mix of responses of different ages.
+
+export async function fetchLeague(leagueId: string): Promise<League | null> {
+  return get<League>(`/league/${encodeURIComponent(leagueId)}`);
+}
+
+export async function fetchLeagueUsers(leagueId: string): Promise<SleeperUser[]> {
   return (await get<SleeperUser[]>(`/league/${encodeURIComponent(leagueId)}/users`)) ?? [];
 }
 
-export async function getLeagueRosters(leagueId: string): Promise<Roster[]> {
-  "use cache";
-  cacheLife("minutes");
+export async function fetchLeagueRosters(leagueId: string): Promise<Roster[]> {
   return (await get<Roster[]>(`/league/${encodeURIComponent(leagueId)}/rosters`)) ?? [];
 }
 
-// The next three aren't cached one by one. There are dozens of calls per season, so
-// src/lib/league-history.ts caches a summary of each season instead.
+// These two are stored in the database, so they're cut down to the fields in their types.
+// Sleeper's responses also list every player, which is most of their size.
 
 export async function fetchMatchups(leagueId: string, week: number): Promise<Matchup[]> {
-  return (await get<Matchup[]>(`/league/${encodeURIComponent(leagueId)}/matchups/${week}`)) ?? [];
+  const matchups = await get<Matchup[]>(`/league/${encodeURIComponent(leagueId)}/matchups/${week}`);
+  return (matchups ?? []).map(({ roster_id, matchup_id, points, custom_points }) => ({
+    roster_id,
+    matchup_id,
+    points,
+    custom_points,
+  }));
 }
 
 export async function fetchTransactions(leagueId: string, week: number): Promise<Transaction[]> {
-  return (await get<Transaction[]>(`/league/${encodeURIComponent(leagueId)}/transactions/${week}`)) ?? [];
+  const transactions = await get<Transaction[]>(`/league/${encodeURIComponent(leagueId)}/transactions/${week}`);
+  return (transactions ?? []).map(({ type, status, roster_ids }) => ({ type, status, roster_ids }));
 }
 
 export async function fetchBracket(leagueId: string, bracket: "winners" | "losers"): Promise<BracketGame[]> {

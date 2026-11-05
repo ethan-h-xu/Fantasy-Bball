@@ -1,6 +1,6 @@
 // Mirrors supabase/migrations. Update this when the schema changes.
 
-import type { SeasonHistory } from "@/lib/league-stats";
+import type { SeasonHistory, SeasonWeeks } from "@/lib/league-stats";
 
 export type Database = {
   public: {
@@ -60,6 +60,7 @@ export type Database = {
           league_id: string;
           format_version: number;
           summary: SeasonHistory;
+          weeks: SeasonWeeks | null;
           created_at: string;
           updated_at: string;
         };
@@ -67,6 +68,7 @@ export type Database = {
           league_id: string;
           format_version: number;
           summary: SeasonHistory;
+          weeks?: SeasonWeeks | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -74,6 +76,7 @@ export type Database = {
           league_id?: string;
           format_version?: number;
           summary?: SeasonHistory;
+          weeks?: SeasonWeeks | null;
           created_at?: string;
           updated_at?: string;
         };

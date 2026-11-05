@@ -31,10 +31,18 @@ export interface FinalResult {
 }
 
 /**
- * Finished seasons are stored in the database in the SeasonHistory format. Raise this when that
- * format or how it's calculated changes, and stored seasons get rebuilt from Sleeper.
+ * Seasons are stored in the database in the SeasonHistory format. Raise this when that format
+ * or how it's calculated changes, and stored seasons get rebuilt from Sleeper.
  */
-export const SUMMARY_FORMAT_VERSION = 1;
+export const SUMMARY_FORMAT_VERSION = 2;
+
+/** The Sleeper data behind a season in progress, so a refresh only has to fetch recent weeks. */
+export interface SeasonWeeks {
+  /** The last fully scored week when this was saved. */
+  scoredThrough: number;
+  matchups: Record<number, Matchup[]>;
+  transactions: Record<number, Transaction[]>;
+}
 
 export interface SeasonHistory {
   leagueId: string;
@@ -184,6 +192,24 @@ export function buildSeason(raw: RawSeason): SeasonHistory {
     champion: finalOf(winnersBracket),
     toiletBowl: finalOf(losersBracket),
   };
+}
+
+/**
+ * Whether the official totals cover the same games as the scored weeks. They might not if Sleeper
+ * is partway through updating a week. Leagues with a weekly median game record two results per
+ * week, so double counts too.
+ */
+export function totalsMatchGames(season: SeasonHistory): boolean {
+  const perGame = standings(season.games.filter((g) => g.phase === "regular"));
+  const gamesPlayed = (line: Line) => line.wins + line.losses + line.ties;
+  const gamesByTeam = new Map(perGame.map((line) => [line.key, gamesPlayed(line)]));
+  return (
+    season.regularSeason.length === perGame.length &&
+    season.regularSeason.every((line) => {
+      const games = gamesByTeam.get(line.key);
+      return games !== undefined && (gamesPlayed(line) === games || gamesPlayed(line) === games * 2);
+    })
+  );
 }
 
 /** custom_points is a commissioner's override of the score. */
