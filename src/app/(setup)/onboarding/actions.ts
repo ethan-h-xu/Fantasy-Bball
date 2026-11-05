@@ -2,8 +2,9 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
-import { getCurrentProfile, requireProfile, requireUser } from "@/lib/auth";
-import { getNbaState, getUser, getUserNbaLeagues, isLockIn } from "@/lib/sleeper";
+import { getCurrentProfile, getFollowedLeagueIds, requireProfile, requireUser } from "@/lib/auth";
+import { getLeagueChoices } from "@/lib/league-follows";
+import { getUser } from "@/lib/sleeper";
 import { createClient } from "@/lib/supabase/server";
 
 export interface FormState {
@@ -47,12 +48,13 @@ export async function saveSleeperUsername(_previous: FormState, formData: FormDa
 export async function saveFollowedLeagues(_previous: FormState, formData: FormData): Promise<FormState> {
   const { user, profile } = await requireProfile();
 
-  const { league_season: season } = await getNbaState();
-  const leagues = await getUserNbaLeagues(profile.sleeper_user_id, season);
+  const { choices } = await getLeagueChoices(profile.sleeper_user_id, await getFollowedLeagueIds());
 
-  // Only the user's own Lock-In leagues can be saved, whatever the form submitted.
+  // Only leagues the picker offers this user can be saved, whatever the form submitted.
   const submitted = new Set(formData.getAll("league_id").map(String));
-  const leagueIds = leagues.filter((l) => isLockIn(l) && submitted.has(l.league_id)).map((l) => l.league_id);
+  const leagueIds = choices
+    .flatMap((choice) => choice.seasons.map((s) => s.leagueId))
+    .filter((leagueId) => submitted.has(leagueId));
   if (leagueIds.length === 0) return { error: "Select at least one league." };
 
   const supabase = await createClient();

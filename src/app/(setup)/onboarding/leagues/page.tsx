@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { LeaguePickerForm } from "@/components/LeaguePickerForm";
 import { NoLockInMessage } from "@/components/NoLockInMessage";
 import { getFollowedLeagueIds, requireProfile } from "@/lib/auth";
-import { getNbaState, getUserNbaLeagues, isLockIn } from "@/lib/sleeper";
+import { getLeagueChoices } from "@/lib/league-follows";
 
 export default function OnboardingLeaguesPage() {
   return (
@@ -18,21 +18,17 @@ export default function OnboardingLeaguesPage() {
 
 async function LeagueStep() {
   const { profile } = await requireProfile();
-  const { league_season: season } = await getNbaState();
-  const [leagues, followedIds] = await Promise.all([
-    getUserNbaLeagues(profile.sleeper_user_id, season),
-    getFollowedLeagueIds(),
-  ]);
-  const lockIn = leagues.filter(isLockIn);
+  const followedIds = await getFollowedLeagueIds();
+  const { season, nbaLeagueCount, choices } = await getLeagueChoices(profile.sleeper_user_id, followedIds);
 
   const changeUsername = (
     <Link href="/onboarding/sleeper">Change Sleeper username</Link>
   );
 
-  if (lockIn.length === 0) {
+  if (choices.length === 0) {
     return (
       <>
-        <NoLockInMessage username={profile.sleeper_username} season={season} nbaLeagueCount={leagues.length} />
+        <NoLockInMessage username={profile.sleeper_username} season={season} nbaLeagueCount={nbaLeagueCount} />
         <p>
           <Link href="/leagues">Continue to dashboard</Link> · {changeUsername}
         </p>
@@ -42,11 +38,8 @@ async function LeagueStep() {
 
   return (
     <>
-      <p>Select the {season} Lock-In leagues {profile.sleeper_username} wants to follow.</p>
-      <LeaguePickerForm
-        leagues={lockIn.map(({ league_id, name, total_rosters }) => ({ league_id, name, total_rosters }))}
-        followedIds={followedIds}
-      />
+      <p>Choose the Lock-In leagues {profile.sleeper_username} wants to follow, and which season of each.</p>
+      <LeaguePickerForm choices={choices} />
       <p className="hint">{changeUsername}</p>
     </>
   );

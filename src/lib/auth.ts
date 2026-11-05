@@ -1,7 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { getNbaState, getUserNbaLeagues, isLockIn } from "@/lib/sleeper";
+import { getLeagueChoices } from "@/lib/league-follows";
 import { createClient } from "@/lib/supabase/server";
 
 // All checks of who is signed in, and how far through registration they are, live here.
@@ -86,9 +86,8 @@ export async function requireOnboardedUser(): Promise<{
   const followedLeagueIds = await getFollowedLeagueIds();
 
   if (followedLeagueIds.length === 0) {
-    const { league_season: season } = await getNbaState();
-    const leagues = await getUserNbaLeagues(profile.sleeper_user_id, season);
-    if (leagues.some(isLockIn)) redirect("/onboarding/leagues");
+    const { choices } = await getLeagueChoices(profile.sleeper_user_id, []);
+    if (choices.length > 0) redirect("/onboarding/leagues");
   }
 
   return { user, profile, followedLeagueIds };
